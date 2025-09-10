@@ -1,26 +1,27 @@
 #!/usr/bin/env bash
 source "$HOME/.dotfiles/Helpers/colors.sh"
 
-# Check if tree is installed
-if command -v tree &>/dev/null; then
-	# Use tree to list files, ignoring .gitignore
-	files=$(tree -if --gitignore | while read -r file; do
-		[[ -f "$file" ]] && file --mime "$file" | grep -q text && echo "$file"
-	done)
-else
-	warning "'tree' is not installed. Falling back to git ls-files..."
-	files=$(git ls-files | while read -r file; do
-		[[ -f "$file" ]] && file --mime "$file" | grep -q text && echo "$file"
-	done)
+if [[ ! -f ~/.dotfiles/Builds/copy_context ]]; then
+	echo "test"
+	if ! command -v cc &>/dev/null; then
+		error "cc is not installed. Please install it."
+		exit 1
+	fi
+
+	cc -O3 -march=native -o ~/.dotfiles/Builds/copy_context ~/.dotfiles/Helpers/copy_context.c
 fi
 
-# Copy each file content to clipboard with headers
-{
-	while read -r file; do
-		echo "===== $file ====="
-		cat "$file"
-		echo -e "\n"
-	done <<< "$files"
-} | xclip -selection clipboard
+if command -v pbcopy &>/dev/null; then
+	~/.dotfiles/Builds/copy_context | pbcopy
+	success "All text files copied to clipboard."
+	exit 0
+fi
 
-success "All text files copied to clipboard."
+if command -v xclip &>/dev/null; then
+    ~/.dotfiles/Builds/copy_context | xclip -selection clipboard
+	success "All text files copied to clipboard."
+	exit 0
+fi
+
+error "xclip or pbcopy is not installed. Please install it."
+exit 1

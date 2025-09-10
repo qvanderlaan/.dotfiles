@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$HOME/.dotfiles/Helpers/colors.sh"
 
-APPIMAGE="$HOME/.dotfiles/AppImages/cursor.AppImage"
+APPIMAGE="$HOME/.dotfiles/Builds/cursor.AppImage"
 FETCH_URL="https://www.cursor.com/api/download?platform=linux-x64&releaseTrack=stable"
 
 mkdir -p "$(dirname "$APPIMAGE")"

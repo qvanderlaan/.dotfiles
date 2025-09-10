@@ -86,7 +86,7 @@ Provides colored output functions for scripts:
 - `warning()` - Yellow colored warnings with ⚠️
 - `error()` - Red colored error messages with ❌
 
-### AppImages Directory
+### Builds Directory
 Stores portable application binaries. Currently includes:
 - **Cursor editor:** Downloaded and managed by the `cursor` command
 
