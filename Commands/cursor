@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+source "$HOME/.dotfiles/Helpers/colors.sh"
+
+APPIMAGE="$HOME/.dotfiles/AppImages/cursor.AppImage"
+FETCH_URL="https://www.cursor.com/api/download?platform=linux-x64&releaseTrack=stable"
+
+mkdir -p "$(dirname "$APPIMAGE")"
+
+fetch_download_url() {
+	if command -v jq &>/dev/null; then
+		curl -sL -H "User-Agent: curl" "$FETCH_URL" | jq -r '.downloadUrl'
+	else
+		curl -sL -H "User-Agent: curl" "$FETCH_URL" | grep -oP '(?<="downloadUrl":")[^"]+'
+	fi
+}
+
+download_appimage() {
+	local url="$1"
+	local tmpfile
+	tmpfile=$(mktemp --suffix=.AppImage)
+	trap 'rm -f "$tmpfile"' EXIT
+
+	curl -L "$url" -o "$tmpfile" --progress-bar || return 1
+	mv "$tmpfile" "$APPIMAGE"
+	chmod +x "$APPIMAGE"
+	trap - EXIT
+}
+
+install_cursor() {
+	if [[ -f "$APPIMAGE" ]]; then
+		warning "Cursor is already installed."
+		read -rp "Do you want to update it now? (y/n) " yn
+		[[ "$yn" =~ ^[Yy] ]] && update_cursor
+		return
+	fi
+
+	info "Installing Cursor..."
+	url=$(fetch_download_url) || { error "Could not get download URL"; exit 1; }
+	download_appimage "$url" && success "Cursor installed successfully"
+}
+
+update_cursor() {
+	if [[ ! -f "$APPIMAGE" ]]; then
+		warning "Cursor is not installed."
+		read -rp "Do you want to install it now? (y/n) " yn
+		[[ "$yn" =~ ^[Yy] ]] && install_cursor
+		return
+	fi
+
+	info "Updating Cursor..."
+	url=$(fetch_download_url) || { error "Could not get download URL"; exit 1; }
+	download_appimage "$url" && success "Cursor updated successfully"
+}
+
+show_help() {
+	echo -e "${BOLD}Usage:${RESET} cursor [--install|-i | --update|-u | --help|-h] [args...]"
+	echo
+	echo -e "${BOLD}Options:${RESET}"
+	echo -e "  --install, -i    Install Cursor"
+	echo -e "  --update, -u     Update Cursor"
+	echo -e "  --help, -h       Show this help message"
+	echo
+	echo "Any other arguments are passed to the Cursor AppImage."
+}
+
+# Parse first argument
+case "$1" in
+	--install|-i) install_cursor; exit 0 ;;
+	--update|-u)  update_cursor; exit 0 ;;
+	--help|-h)    show_help; exit 0 ;;
+esac
+
+# Default: run AppImage with any arguments
+[[ -f "$APPIMAGE" ]] || { error "Cursor is not installed. Run 'cursor --install' first."; exit 1; }
+( nohup "$APPIMAGE" "$@" >/dev/null 2>&1 & )

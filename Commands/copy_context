@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+source "$HOME/.dotfiles/Helpers/colors.sh"
+
+# Check if tree is installed
+if command -v tree &>/dev/null; then
+	# Use tree to list files, ignoring .gitignore
+	files=$(tree -if --gitignore | while read -r file; do
+		[[ -f "$file" ]] && file --mime "$file" | grep -q text && echo "$file"
+	done)
+else
+	warning "'tree' is not installed. Falling back to git ls-files..."
+	files=$(git ls-files | while read -r file; do
+		[[ -f "$file" ]] && file --mime "$file" | grep -q text && echo "$file"
+	done)
+fi
+
+# Copy each file content to clipboard with headers
+{
+	while read -r file; do
+		echo "===== $file ====="
+		cat "$file"
+		echo -e "\n"
+	done <<< "$files"
+} | xclip -selection clipboard
+
+success "All text files copied to clipboard."
