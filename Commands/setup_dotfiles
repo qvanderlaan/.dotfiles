@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
 git config --global core.excludesfile ~/.dotfiles/Storage/.gitignore_global
+
+ln -s ~/.dotfiles/Storage/zed_settings.json ~/.config/zed/settings.json
