@@ -9,39 +9,42 @@ fi
 CONFIG_FILE="$HOME/.dotfiles/config.json"
 TARGET_FILE=$1
 FILENAME=$(basename "$TARGET_FILE")
-USER=$(jq -r '."CodamHeader"."username"' "$CONFIG_FILE" 2>/dev/null || whoami)
-MAIL=$(jq -r '."CodamHeader"."email"' "$CONFIG_FILE" 2>/dev/null || echo "user@example.com")
+
+USER=$(jq -r '."CodamHeader"."username" // empty' "$CONFIG_FILE" 2>/dev/null)
+MAIL=$(jq -r '."CodamHeader"."email" // empty' "$CONFIG_FILE" 2>/dev/null)
+LEN=$(jq -r '."CodamHeader"."length"' "$CONFIG_FILE")
+MARGIN=$(jq -r '."CodamHeader"."margin"' "$CONFIG_FILE")
+ASCII=()
+while IFS= read -r line; do
+	ASCII+=("$line")
+done < <(jq -r '."CodamHeader"."asciiart"[]' "$CONFIG_FILE")
+
+USER=${USER:-$(whoami)}
+MAIL=${MAIL:-user@example.com}
 
 generate_line() {
-	local max_len=$(( $(jq -r '."CodamHeader"."length"' "$CONFIG_FILE") \
-					- ($(jq -r '."CodamHeader"."margin"' "$CONFIG_FILE") * 2) \
-					- ${#2} - 6 ))
-	local margin=$(printf '%*s' $(jq -r '."CodamHeader"."margin"' "$CONFIG_FILE"))
-	local spaces=$(printf '%*s' $(( max_len - ${#1} )) '')
+	local text="$1" right="$2"
+	local max_len=$(( LEN - (MARGIN * 2) - ${#right} - 6 ))
+	local margin=$(printf '%*s' "$MARGIN")
+	local spaces=$(printf '%*s' $(( max_len - ${#text} )))
 
-	echo "/* $margin$1$spaces$2$margin */"
+	echo "/* $margin$text$spaces$right$margin */"
 }
 
 generate_header() {
-	local fill_line="/* $(printf '%*s' $(($(jq -r '."CodamHeader"."length"' "$CONFIG_FILE") - 6)) '' | tr ' ' '*') */"
+	local fill_line="/* $(printf '%*s' $(( LEN - 6 )) | tr ' ' '*') */"
 	local empty_line=$(generate_line "" "")
 	local date=$(date +"%Y/%m/%d %H:%M:%S")
-	ascii=()
-	i=0
-	while IFS= read -r line; do
-		ascii[$i]="$line"
-		i=$((i+1))
-	done < <(jq -r '."CodamHeader"."asciiart"[]' "$CONFIG_FILE")
 
 	echo "$fill_line"
 	echo "$empty_line"
-	echo "$(generate_line "" "${ascii[0]}")"
-	echo "$(generate_line "$FILENAME" "${ascii[1]}")"
-	echo "$(generate_line "" "${ascii[2]}")"
-	echo "$(generate_line "By: $USER <$MAIL>" "${ascii[3]}")"
-	echo "$(generate_line "" "${ascii[4]}")"
-	echo "$(generate_line "Created: $date by $USER" "${ascii[5]}")"
-	echo "$(generate_line "Updated: $date by $USER" "${ascii[6]}")"
+	echo "$(generate_line "" "${ASCII[0]}")"
+	echo "$(generate_line "$FILENAME"  "${ASCII[1]}")"
+	echo "$(generate_line "" "${ASCII[2]}")"
+	echo "$(generate_line "By: $USER <$MAIL>" "${ASCII[3]}")"
+	echo "$(generate_line "" "${ASCII[4]}")"
+	echo "$(generate_line "Created: $date by $USER" "${ASCII[5]}")"
+	echo "$(generate_line "Updated: $date by $USER" "${ASCII[6]}")"
 	echo "$empty_line"
 	echo "$fill_line"
 }
@@ -52,21 +55,16 @@ has_header() {
 
 	for i in "${!line_numbers[@]}"; do
 		local n="${line_numbers[$i]}"
-		local file_line
-		file_line=$(sed -n "${n}p" "$TARGET_FILE")
+		local file_line=$(sed -n "${n}p" "$TARGET_FILE")
 
-		if [[ "$file_line" != "${expected[$n-1]}" ]]; then
-			return 1
-		fi
+		[[ "$file_line" == "${expected[$n-1]}" ]] || return 1
 	done
 	return 0
 }
 
 insert_header() {
 	{
-		for line in "${header[@]}"; do
-			echo "$line"
-		done
+		printf "%s\n" "${header[@]}"
 		echo ""
 		cat "$TARGET_FILE"
 	} > "$TARGET_FILE.new"
@@ -82,9 +80,8 @@ update_header() {
 		new_header+=("$line")
 	done < <(generate_header)
 
-	local margin=$(jq -r '."CodamHeader"."margin"' "$CONFIG_FILE")
-	local last_ascii=$(jq -r '."CodamHeader"."asciiart"[6]' "$CONFIG_FILE")
-	local sum=$(( ${#last_ascii} + margin + 3 ))
+	local last_ascii="${ASCII[6]}"
+	local sum=$(( ${#last_ascii} + MARGIN + 3 ))
 
 	local prefix="${created_line:0:${#created_line}-$sum}"
 	local suffix="${new_header[7]: -$sum}"
@@ -92,9 +89,7 @@ update_header() {
 
 	tmpfile=$(mktemp)
 	{
-		for line in "${new_header[@]}"; do
-			echo "$line"
-		done
+		printf "%s\n" "${new_header[@]}"
 		tail -n +$((${#new_header[@]}+1)) "$TARGET_FILE"
 	} > "$tmpfile"
 
