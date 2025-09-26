@@ -77,7 +77,8 @@
 		"**/.DS_Store",
 		"**/Thumbs.db",
 		"**/.vscode",
-		"**/*.o"
+		"**/*.o",
+		"compile_flags.txt"
 	],
 	"languages": {
 		"C": {

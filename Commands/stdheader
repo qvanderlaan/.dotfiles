@@ -6,93 +6,113 @@ if [ -z "$1" ]; then
 	exit 1
 fi
 
-read -r -d '' GENERIC_TEMPLATE <<'EOF'
-* **************************************************************************** *
-*                                                                              *
-*                                                         ::::::::             *
-*    $FILENAME__________________________________        :+:    :+:             *
-*                                                      +:+                     *
-*    By: $AUTHOR________________________________      +#+                      *
-*                                                    +#+                       *
-*    Created: $CREATEDAT_________ by $CREATEDBY_   #+#    #+#                  *
-*    Updated: $UPDATEDAT_________ by $UPDATEDBY_   ########   odam.nl          *
-*                                                                              *
-* **************************************************************************** *
-EOF
-
+CONFIG_FILE="$HOME/.dotfiles/config.json"
 TARGET_FILE=$1
 FILENAME=$(basename "$TARGET_FILE")
-CONFIG_FILE="$HOME/.dotfiles/config.json"
+USER=$(jq -r '."CodamHeader"."username"' "$CONFIG_FILE" 2>/dev/null || whoami)
+MAIL=$(jq -r '."CodamHeader"."email"' "$CONFIG_FILE" 2>/dev/null || echo "user@example.com")
 
-# --- Helper Functions ---
+generate_line() {
+	local max_len=$(( $(jq -r '."CodamHeader"."length"' "$CONFIG_FILE") \
+					- ($(jq -r '."CodamHeader"."margin"' "$CONFIG_FILE") * 2) \
+					- ${#2} - 6 ))
+	local margin=$(printf '%*s' $(jq -r '."CodamHeader"."margin"' "$CONFIG_FILE"))
+	local spaces=$(printf '%*s' $(( max_len - ${#1} )) '')
 
-get_template_for_file() {
-	local filename="$1"
-	local left_delim="* "
-	local right_delim=" *"
-
-	case "$filename" in
-		*.c|*.h|*.cpp|*.hpp|*.js|*.ts|*.css|*.scss|*.java|*.go)
-			left_delim="/*"
-			right_delim="*/"
-			;;
-		*.html|*.xml|*.svg)
-			left_delim="<!--"
-			right_delim="-->"
-			;;
-		*.sh|*.py|*.rb|*.pl)
-			left_delim="#"
-			right_delim="#"
-			;;
-	esac
-
-	awk -v ld="$left_delim" -v rd="$right_delim" '
-	BEGIN {
-		OFS="";
-	}
-	{
-		line = substr($0, 3, length($0) - 4);
-		print ld, line, rd;
-	}
-	' <<< "$GENERIC_TEMPLATE"
-}
-
-pad() {
-	local value="$1"
-	local width="$2"
-	printf "%-${width}s" "$value" | cut -c 1-$width
-}
-
-format_date() {
-	date +"%Y/%m/%d %H:%M:%S"
+	echo "/* $margin$1$spaces$2$margin */"
 }
 
 generate_header() {
-	local user=$(jq -r '."42"."username"' "$CONFIG_FILE" 2>/dev/null || whoami)
-	local mail=$(jq -r '."42"."email"' "$CONFIG_FILE" 2>/dev/null || echo "user@example.com")
+	local fill_line="/* $(printf '%*s' $(($(jq -r '."CodamHeader"."length"' "$CONFIG_FILE") - 6)) '' | tr ' ' '*') */"
+	local empty_line=$(generate_line "" "")
+	local date=$(date +"%Y/%m/%d %H:%M:%S")
+	ascii=()
+	i=0
+	while IFS= read -r line; do
+		ascii[$i]="$line"
+		i=$((i+1))
+	done < <(jq -r '."CodamHeader"."asciiart"[]' "$CONFIG_FILE")
 
-	local author_string="${user} <${mail}>"
-	local now=$(format_date)
-	local template=$(get_template_for_file "$FILENAME")
-
-	local rendered_header="$template"
-	rendered_header=$(echo "$rendered_header" | sed "s#\\\$FILENAME_*#$(pad "$FILENAME" 43)#")
-	rendered_header=$(echo "$rendered_header" | sed "s#\\\$AUTHOR_*#$(pad "$author_string" 39)#")
-	rendered_header=$(echo "$rendered_header" | sed "s#\\\$CREATEDAT_*#$(pad "$now" 19)#")
-	rendered_header=$(echo "$rendered_header" | sed "s#\\\$CREATEDBY_*#$(pad "$user" 11)#")
-	rendered_header=$(echo "$rendered_header" | sed "s#\\\$UPDATEDAT_*#$(pad "$now" 19)#")
-	rendered_header=$(echo "$rendered_header" | sed "s#\\\$UPDATEDBY_*#$(pad "$user" 11)#")
-
-	echo "$rendered_header"
+	echo "$fill_line"
+	echo "$empty_line"
+	echo "$(generate_line "" "${ascii[0]}")"
+	echo "$(generate_line "$FILENAME" "${ascii[1]}")"
+	echo "$(generate_line "" "${ascii[2]}")"
+	echo "$(generate_line "By: $USER <$MAIL>" "${ascii[3]}")"
+	echo "$(generate_line "" "${ascii[4]}")"
+	echo "$(generate_line "Created: $date by $USER" "${ascii[5]}")"
+	echo "$(generate_line "Updated: $date by $USER" "${ascii[6]}")"
+	echo "$empty_line"
+	echo "$fill_line"
 }
 
-HEADER=$(generate_header "$FILENAME")
-TEMP_FILE=$(mktemp)
+has_header() {
+	local expected=("$@")
+	local -a line_numbers=(1 2 10 11)
 
-echo "$HEADER" > "$TEMP_FILE"
-echo "" >> "$TEMP_FILE"
-cat "$TARGET_FILE" >> "$TEMP_FILE"
+	for i in "${!line_numbers[@]}"; do
+		local n="${line_numbers[$i]}"
+		local file_line
+		file_line=$(sed -n "${n}p" "$TARGET_FILE")
 
-mv "$TEMP_FILE" "$TARGET_FILE"
+		if [[ "$file_line" != "${expected[$n-1]}" ]]; then
+			return 1
+		fi
+	done
+	return 0
+}
 
-success "Header inserted into $FILENAME"
+insert_header() {
+	{
+		for line in "${header[@]}"; do
+			echo "$line"
+		done
+		echo ""
+		cat "$TARGET_FILE"
+	} > "$TARGET_FILE.new"
+
+	mv "$TARGET_FILE.new" "$TARGET_FILE"
+}
+
+update_header() {
+	local created_line=$(sed -n '8p' "$TARGET_FILE")
+
+	new_header=()
+	while IFS= read -r line; do
+		new_header+=("$line")
+	done < <(generate_header)
+
+	local margin=$(jq -r '."CodamHeader"."margin"' "$CONFIG_FILE")
+	local last_ascii=$(jq -r '."CodamHeader"."asciiart"[6]' "$CONFIG_FILE")
+	local sum=$(( ${#last_ascii} + margin + 3 ))
+
+	local prefix="${created_line:0:${#created_line}-$sum}"
+	local suffix="${new_header[7]: -$sum}"
+	new_header[7]="$prefix$suffix"
+
+	tmpfile=$(mktemp)
+	{
+		for line in "${new_header[@]}"; do
+			echo "$line"
+		done
+		tail -n +$((${#new_header[@]}+1)) "$TARGET_FILE"
+	} > "$tmpfile"
+
+	mv "$tmpfile" "$TARGET_FILE"
+}
+
+stdheader()
+{
+	header=()
+	while IFS= read -r line; do
+		header+=("$line")
+	done < <(generate_header)
+
+	if has_header "${header[@]}"; then
+		update_header
+	elif [ $(jq -r '."CodamHeader"."autoinsert"' "$CONFIG_FILE") == true ]; then
+		insert_header
+	fi
+}
+
+stdheader
