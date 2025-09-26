@@ -85,7 +85,8 @@
 			"enable_language_server": true,
 			"formatter": {
 				"external": {
-					"command": "c_formatter_42"
+					"command": "c_formatter_42",
+					"arguments": ["{buffer_path}"]
 				}
 			}
 		},

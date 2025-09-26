@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+source "$HOME/.dotfiles/Helpers/colors.sh"
+
+if [ -z "$1" ]; then
+	error "Error: Please provide a file path."
+	exit 1
+fi
+
+read -r -d '' GENERIC_TEMPLATE <<'EOF'
+* **************************************************************************** *
+*                                                                              *
+*                                                         ::::::::             *
+*    $FILENAME__________________________________        :+:    :+:             *
+*                                                      +:+                     *
+*    By: $AUTHOR________________________________      +#+                      *
+*                                                    +#+                       *
+*    Created: $CREATEDAT_________ by $CREATEDBY_   #+#    #+#                  *
+*    Updated: $UPDATEDAT_________ by $UPDATEDBY_   ########   odam.nl          *
+*                                                                              *
+* **************************************************************************** *
+EOF
+
+TARGET_FILE=$1
+FILENAME=$(basename "$TARGET_FILE")
+CONFIG_FILE="$HOME/.dotfiles/config.json"
+
+# --- Helper Functions ---
+
+get_template_for_file() {
+	local filename="$1"
+	local left_delim="* "
+	local right_delim=" *"
+
+	case "$filename" in
+		*.c|*.h|*.cpp|*.hpp|*.js|*.ts|*.css|*.scss|*.java|*.go)
+			left_delim="/*"
+			right_delim="*/"
+			;;
+		*.html|*.xml|*.svg)
+			left_delim="<!--"
+			right_delim="-->"
+			;;
+		*.sh|*.py|*.rb|*.pl)
+			left_delim="#"
+			right_delim="#"
+			;;
+	esac
+
+	awk -v ld="$left_delim" -v rd="$right_delim" '
+	BEGIN {
+		OFS="";
+	}
+	{
+		line = substr($0, 3, length($0) - 4);
+		print ld, line, rd;
+	}
+	' <<< "$GENERIC_TEMPLATE"
+}
+
+pad() {
+	local value="$1"
+	local width="$2"
+	printf "%-${width}s" "$value" | cut -c 1-$width
+}
+
+format_date() {
+	date +"%Y/%m/%d %H:%M:%S"
+}
+
+generate_header() {
+	local user=$(jq -r '."42"."username"' "$CONFIG_FILE" 2>/dev/null || whoami)
+	local mail=$(jq -r '."42"."email"' "$CONFIG_FILE" 2>/dev/null || echo "user@example.com")
+
+	local author_string="${user} <${mail}>"
+	local now=$(format_date)
+	local template=$(get_template_for_file "$FILENAME")
+
+	local rendered_header="$template"
+	rendered_header=$(echo "$rendered_header" | sed "s#\\\$FILENAME_*#$(pad "$FILENAME" 43)#")
+	rendered_header=$(echo "$rendered_header" | sed "s#\\\$AUTHOR_*#$(pad "$author_string" 39)#")
+	rendered_header=$(echo "$rendered_header" | sed "s#\\\$CREATEDAT_*#$(pad "$now" 19)#")
+	rendered_header=$(echo "$rendered_header" | sed "s#\\\$CREATEDBY_*#$(pad "$user" 11)#")
+	rendered_header=$(echo "$rendered_header" | sed "s#\\\$UPDATEDAT_*#$(pad "$now" 19)#")
+	rendered_header=$(echo "$rendered_header" | sed "s#\\\$UPDATEDBY_*#$(pad "$user" 11)#")
+
+	echo "$rendered_header"
+}
+
+HEADER=$(generate_header "$FILENAME")
+TEMP_FILE=$(mktemp)
+
+echo "$HEADER" > "$TEMP_FILE"
+echo "" >> "$TEMP_FILE"
+cat "$TARGET_FILE" >> "$TEMP_FILE"
+
+mv "$TEMP_FILE" "$TARGET_FILE"
+
+success "Header inserted into $FILENAME"
