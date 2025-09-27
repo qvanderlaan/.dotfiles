@@ -78,7 +78,8 @@
 		"**/Thumbs.db",
 		"**/.vscode",
 		"**/*.o",
-		"compile_flags.txt"
+		"compile_flags.txt",
+		".clang-format"
 	],
 	"languages": {
 		"C": {
@@ -86,7 +87,7 @@
 			"enable_language_server": true,
 			"formatter": {
 				"external": {
-					"command": "c_formatter_42",
+					"command": "format_42_c",
 					"arguments": ["{buffer_path}"]
 				}
 			}

@@ -1,13 +1,32 @@
 #!/usr/bin/env bash
 source "$HOME/.dotfiles/Helpers/colors.sh"
 
-if [ -z "$1" ]; then
-	error "Error: Please provide a file path."
+CONFIG_FILE="$HOME/.dotfiles/config.json"
+
+TARGET_FILE=""
+USE_STDIN=false
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		--stdin-filepath)
+			shift
+			TARGET_FILE="$1"
+			USE_STDIN=true
+			;;
+		*)
+			if [[ -z "$TARGET_FILE" ]]; then
+				TARGET_FILE="$1"
+			fi
+			;;
+	esac
+	shift
+done
+
+if [ -z "$TARGET_FILE" ]; then
+	error "Error: Please provide a file path or --stdin-filepath."
 	exit 1
 fi
 
-CONFIG_FILE="$HOME/.dotfiles/config.json"
-TARGET_FILE=$1
 FILENAME=$(basename "$TARGET_FILE")
 
 USER=$(jq -r '."CodamHeader"."username" // empty' "$CONFIG_FILE" 2>/dev/null)
@@ -55,7 +74,7 @@ has_header() {
 
 	for i in "${!line_numbers[@]}"; do
 		local n="${line_numbers[$i]}"
-		local file_line=$(sed -n "${n}p" "$TARGET_FILE")
+		local file_line=$(sed -n "${n}p" "$TMPFILE")
 
 		[[ "$file_line" == "${expected[$n-1]}" ]] || return 1
 	done
@@ -63,17 +82,18 @@ has_header() {
 }
 
 insert_header() {
+	tmpfile=$(mktemp)
 	{
 		printf "%s\n" "${header[@]}"
 		echo ""
-		cat "$TARGET_FILE"
-	} > "$TARGET_FILE.new"
+		cat "$TMPFILE"
+	} > "$tmpfile"
 
-	mv "$TARGET_FILE.new" "$TARGET_FILE"
+	mv "$tmpfile" "$TMPFILE"
 }
 
 update_header() {
-	local created_line=$(sed -n '8p' "$TARGET_FILE")
+	local created_line=$(sed -n '8p' "$TMPFILE")
 
 	new_header=()
 	while IFS= read -r line; do
@@ -90,10 +110,10 @@ update_header() {
 	tmpfile=$(mktemp)
 	{
 		printf "%s\n" "${new_header[@]}"
-		tail -n +$((${#new_header[@]}+1)) "$TARGET_FILE"
+		tail -n +$((${#new_header[@]}+1)) "$TMPFILE"
 	} > "$tmpfile"
 
-	mv "$tmpfile" "$TARGET_FILE"
+	mv "$tmpfile" "$TMPFILE"
 }
 
 stdheader()
@@ -110,4 +130,16 @@ stdheader()
 	fi
 }
 
+if $USE_STDIN; then
+	TMPFILE=$(mktemp)
+	cat /dev/stdin > "$TMPFILE"
+else
+	TMPFILE="$TARGET_FILE"
+fi
+
 stdheader
+
+if $USE_STDIN; then
+	cat "$TMPFILE"
+	rm "$TMPFILE"
+fi
