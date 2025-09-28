@@ -3,9 +3,8 @@ source "$HOME/.dotfiles/Helpers/colors.sh"
 
 warning "Are you sure you want to reset all changes? (y/n)"
 read response
-if [[ "$response" != "y" || "$response" != "Y" ]]; then
-
-	info "Changes have not been reset."
+if [[ "$response" != "y" && "$response" != "Y" ]]; then
+	error "Changes have not been reset."
 	exit 0
 fi
 git reset --hard
