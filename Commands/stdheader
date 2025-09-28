@@ -41,17 +41,38 @@ done < <(jq -r '."CodamHeader"."asciiart"[]' "$CONFIG_FILE")
 USER=${USER:-$(whoami)}
 MAIL=${MAIL:-user@example.com}
 
+detect_comment_style() {
+	case "$FILENAME" in
+		*.c|*.h)
+			COMMENT_LEFT="/*"
+			COMMENT_RIGHT="*/"
+			COMMENT_FILL="*"
+			;;
+		Makefile|*.mk)
+			COMMENT_LEFT="#"
+			COMMENT_RIGHT="#"
+			COMMENT_FILL="*"
+			;;
+		*)
+			COMMENT_LEFT="/*"
+			COMMENT_RIGHT="*/"
+			COMMENT_FILL="*"
+			;;
+	esac
+}
+detect_comment_style
+
 generate_line() {
 	local text="$1" right="$2"
-	local max_len=$(( LEN - (MARGIN * 2) - ${#right} - 6 ))
+	local max_len=$(( LEN - (MARGIN * 2) - ${#COMMENT_LEFT} - ${#COMMENT_RIGHT} - 2 - ${#right} ))
 	local margin=$(printf '%*s' "$MARGIN")
 	local spaces=$(printf '%*s' $(( max_len - ${#text} )))
 
-	echo "/* $margin$text$spaces$right$margin */"
+	echo "$COMMENT_LEFT $margin$text$spaces$right$margin $COMMENT_RIGHT"
 }
 
 generate_header() {
-	local fill_line="/* $(printf '%*s' $(( LEN - 6 )) | tr ' ' '*') */"
+	local fill_line="$COMMENT_LEFT $(printf '%*s' $(( LEN - ${#COMMENT_LEFT} - ${#COMMENT_RIGHT} - 2 )) | tr ' ' "$COMMENT_FILL") $COMMENT_RIGHT"
 	local empty_line=$(generate_line "" "")
 	local date=$(date +"%Y/%m/%d %H:%M:%S")
 
@@ -101,7 +122,7 @@ update_header() {
 	done < <(generate_header)
 
 	local last_ascii="${ASCII[6]}"
-	local sum=$(( ${#last_ascii} + MARGIN + 3 ))
+	local sum=$(( ${#last_ascii} + MARGIN + ${#COMMENT_LEFT} + ${#COMMENT_RIGHT} + 2 ))
 
 	local prefix="${created_line:0:${#created_line}-$sum}"
 	local suffix="${new_header[7]: -$sum}"

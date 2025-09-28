@@ -81,6 +81,9 @@
 		"compile_flags.txt",
 		".clang-format"
 	],
+	"file_types": {
+		"C": ["C", "H", "c", "h"]
+	},
 	"languages": {
 		"C": {
 			"format_on_save": "on",
@@ -89,6 +92,15 @@
 				"external": {
 					"command": "format_42_c",
 					"arguments": ["{buffer_path}"]
+				}
+			}
+		},
+		"Make": {
+			"format_on_save": "on",
+			"formatter": {
+				"external": {
+					"command": "stdheader",
+					"arguments": ["--stdin-filepath", "{buffer_path}"]
 				}
 			}
 		},
