@@ -19,7 +19,7 @@ Ensure you have the following tools installed on your system:
 
 1.	**Clone the repository:**
 	```bash
-	git clone <your-repo-url> ~/.dotfiles
+	git clone git@github.com:qvanderlaan/.dotfiles.git ~/.dotfiles
 	```
 
 2.	**Run the setup script:**
