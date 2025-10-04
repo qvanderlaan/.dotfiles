@@ -56,6 +56,7 @@
 		"show_nav_history_buttons": false,
 		"show_tab_bar_buttons": false
 	},
+	"extend_comment_on_newline": false,
 	"tabs": {
 		"git_status": true,
 		"file_icons": true
@@ -82,7 +83,8 @@
 		".clang-format"
 	],
 	"file_types": {
-		"C": ["C", "H", "c", "h"]
+		"C": ["C", "H", "c", "h"],
+		"TSX": ["TSX", "JSX"]
 	},
 	"languages": {
 		"C": {
@@ -107,6 +109,15 @@
 		"JSON": {
 			"format_on_save": "on",
 			"tab_size": 4
+		},
+		"TSX": {
+			"format_on_save": "on",
+			"tab_size": 2,
+			"hard_tabs": false,
+			"show_whitespaces": "trailing",
+			"code_actions_on_format": {
+				"source.fixAll.eslint": true
+			}
 		}
 	}
 }
