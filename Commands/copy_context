@@ -1,27 +1,119 @@
 #!/usr/bin/env bash
 source "$HOME/.dotfiles/Helpers/colors.sh"
 
-if [[ ! -f ~/.dotfiles/Builds/copy_context ]]; then
-	echo "test"
+binary="$HOME/.dotfiles/Builds/copy_context"
+source_c="$HOME/.dotfiles/Helpers/copy_context.c"
+
+print_help() {
+    echo
+    info "═══════════════════════════════════════════════"
+    info "             copy_context – Helper"
+    info "═══════════════════════════════════════════════"
+    echo
+
+    echo "📖 Usage:"
+    echo "  copy_context.sh [OPTIONS]"
+    echo
+    echo "Options:"
+    echo "  --strip-indent    Remove leading spaces/tabs from each line"
+    echo "  --rebuild         Force recompilation of the C program"
+    echo "  -h, --help        Show this help message and exit"
+    echo
+
+    echo "⚙️  Behavior:"
+    echo "  - Collects all text files under current directory"
+    echo "    (using 'tree -if --gitignore')"
+    echo "  - Pipes their contents into your clipboard"
+    echo
+
+    echo "🖥️  System Info:"
+    os=$(uname)
+    if [[ "$os" == "Darwin" ]]; then
+        if command -v pbcopy &>/dev/null; then
+            success "macOS detected – pbcopy available"
+        else
+            error   "macOS detected – pbcopy missing"
+        fi
+    elif [[ "$os" == "Linux" ]]; then
+        if command -v xclip &>/dev/null; then
+            success "Linux detected – xclip available"
+        else
+            error   "Linux detected – xclip missing"
+        fi
+    else
+        warn "Unknown OS: $os (clipboard integration may not work)"
+    fi
+    echo
+
+    echo "🔨 Build Status:"
+    if [[ -f "$binary" ]]; then
+        bin_date=$(date -r "$binary" +"%Y-%m-%d %H:%M:%S")
+        src_date=$(date -r "$source_c" +"%Y-%m-%d %H:%M:%S")
+
+        echo "  Binary: $binary"
+        echo "  Built on: $bin_date"
+        echo "  Source last modified: $src_date"
+
+        if [[ "$source_c" -nt "$binary" ]]; then
+            warn "Binary is OUTDATED, rebuild recommended"
+        else
+            success "Binary is up-to-date"
+        fi
+    else
+        error "Binary not yet compiled"
+    fi
+    echo
+
+    echo "💡 Examples:"
+    echo "  ./copy_context.sh"
+    echo "  ./copy_context.sh --strip-indent"
+    echo "  ./copy_context.sh --rebuild --strip-indent"
+    echo
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+	print_help
+	exit 0
+fi
+
+# Check if rebuild is requested
+rebuild=0
+for arg in "$@"; do
+	if [[ "$arg" == "--rebuild" ]]; then
+		rebuild=1
+		set -- "${@/--rebuild/}"
+	fi
+done
+
+# Build binary if missing, outdated, or forced
+if [[ $rebuild -eq 1 || ! -f "$binary" || "$source_c" -nt "$binary" ]]; then
 	if ! command -v cc &>/dev/null; then
 		error "cc is not installed. Please install it."
 		exit 1
 	fi
-
-	cc -O3 -march=native -o ~/.dotfiles/Builds/copy_context ~/.dotfiles/Helpers/copy_context.c
+	cc -O3 -march=native -o "$binary" "$source_c"
 fi
 
-if command -v pbcopy &>/dev/null; then
-	~/.dotfiles/Builds/copy_context | pbcopy
-	success "All text files copied to clipboard."
-	exit 0
+os=$(uname)
+if [[ "$os" == "Darwin" ]]; then
+	if command -v pbcopy &>/dev/null; then
+		"$binary" "$@" | pbcopy
+		success "All text files copied to clipboard (pbcopy)."
+		exit 0
+	else
+		error "pbcopy not found. Please install it."
+		exit 1
+	fi
+elif [[ "$os" == "Linux" ]]; then
+	if command -v xclip &>/dev/null; then
+		"$binary" "$@" | xclip -selection clipboard
+		success "All text files copied to clipboard (xclip)."
+		exit 0
+	else
+		error "xclip not found. Please install it."
+		exit 1
+	fi
+else
+	error "Unsupported OS: $os"
+	exit 1
 fi
-
-if command -v xclip &>/dev/null; then
-    ~/.dotfiles/Builds/copy_context | xclip -selection clipboard
-	success "All text files copied to clipboard."
-	exit 0
-fi
-
-error "xclip or pbcopy is not installed. Please install it."
-exit 1

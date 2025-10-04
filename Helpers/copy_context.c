@@ -7,6 +7,8 @@
 
 #define TEXT_SAMPLE 4096
 
+int		strip_indent = 0;
+
 int	is_text(const char *path)
 {
 	int				fd;
@@ -32,27 +34,48 @@ int	is_text(const char *path)
 
 void	output_file(const char *path)
 {
-	int		fd;
-	char	buf[8192];
-	ssize_t	n;
+	FILE	*fp;
+	char	*line;
+	size_t	len;
+	char	*p;
 
+	line = NULL;
+	len = 0;
 	printf("===== %s =====\n", path);
-	fd = open(path, O_RDONLY);
-	if (fd < 0)
+	fp = fopen(path, "r");
+	if (!fp)
 		return ;
-	while ((n = read(fd, buf, sizeof(buf))) > 0)
-		fwrite(buf, 1, n, stdout);
-	close(fd);
+	while (getline(&line, &len, fp) != -1)
+	{
+		if (strip_indent)
+		{
+			p = line;
+			while (*p == ' ' || *p == '\t')
+				p++;
+			fputs(p, stdout);
+		}
+		else
+		{
+			fputs(line, stdout);
+		}
+	}
+	free(line);
+	fclose(fp);
 	printf("\n\n");
 }
 
-int	main(void)
+int	main(int argc, char **argv)
 {
 	FILE		*tree;
 	char		path[4096];
 	size_t		len;
 	struct stat	st;
 
+	for (int i = 1; i < argc; i++)
+	{
+		if (strcmp(argv[i], "--strip-indent") == 0)
+			strip_indent = 1;
+	}
 	tree = popen("tree -if --gitignore", "r");
 	if (!tree)
 	{
