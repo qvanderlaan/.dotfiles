@@ -133,3 +133,62 @@ nah
 cursor
 cursor myproject/
 ```
+
+## 📋 `copy_context`
+
+The `copy_context` command compiles and runs a small C utility that copies the contents of all text files in your project (ignoring `.gitignore` rules) into your clipboard.
+This is especially useful for providing full project context to LLMs without manual copy-pasting.
+
+### 🔑 Options
+
+| Flag | Description |
+|------|-------------|
+| `--strip-indent` | Remove leading spaces/tabs from each line of text before copying. |
+| `--rebuild` | Force recompilation of the C program, even if the binary is up-to-date. |
+| `-h`, `--help` | Show usage information and exit. |
+| `--status` | Show a status dashboard (OS, clipboard availability, binary build info). |
+
+### 💻 System Support
+
+- **macOS** → requires `pbcopy` & `cc`
+- **Linux** → requires `xclip` & `cc`
+
+### 🖥️ Example Help Output
+
+```bash
+copy_context --help
+```
+
+```
+═══════════════════════════════════════════════
+             copy_context – Helper
+═══════════════════════════════════════════════
+
+📖 Usage:
+  copy_context.sh [OPTIONS]
+
+Options:
+  --strip-indent    Remove leading spaces/tabs from each line
+  --rebuild         Force recompilation of the C program
+  -h, --help        Show this help message and exit
+  --status          Show system + build status only
+
+⚙️  Behavior:
+  - Collects all text files under current directory
+    (using 'tree -if --gitignore')
+  - Pipes their contents into your clipboard
+
+🖥️  System Info:
+✅ macOS detected – pbcopy available
+
+🔨 Build Status:
+  Binary: /Users/you/.dotfiles/Builds/copy_context
+  Built on: 2025-10-04 12:31:45
+  Source last modified: 2025-10-04 12:20:10
+✅ Binary is up-to-date
+
+💡 Examples:
+  copy_context
+  copy_context --strip-indent
+  copy_context --rebuild --strip-indent
+```
