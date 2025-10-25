@@ -97,12 +97,30 @@
 				}
 			}
 		},
+		"C++": {
+			"format_on_save": "on",
+			"enable_language_server": true,
+			"formatter": {
+				"external": {
+					"command": "stdheader",
+					"arguments": [
+						"--insert",
+						"--stdin-filepath",
+						"{buffer_path}"
+					]
+				}
+			}
+		},
 		"Make": {
 			"format_on_save": "on",
 			"formatter": {
 				"external": {
 					"command": "stdheader",
-					"arguments": ["--stdin-filepath", "{buffer_path}"]
+					"arguments": [
+						"--insert",
+						"--stdin-filepath",
+						"{buffer_path}"
+					]
 				}
 			}
 		},

@@ -5,13 +5,21 @@ CONFIG_FILE="$HOME/.dotfiles/config.json"
 
 TARGET_FILE=""
 USE_STDIN=false
+FORCE_INSERT=false
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 		--stdin-filepath)
 			shift
+			if [[ -z "$1" ]]; then
+				error "Error: --stdin-filepath requires a file path argument."
+				exit 1
+			fi
 			TARGET_FILE="$1"
 			USE_STDIN=true
+			;;
+		--insert)
+			FORCE_INSERT=true
 			;;
 		*)
 			if [[ -z "$TARGET_FILE" ]]; then
@@ -43,7 +51,7 @@ MAIL=${MAIL:-user@example.com}
 
 detect_comment_style() {
 	case "$FILENAME" in
-		*.c|*.h)
+		*.c|*.h|*.cpp|*.hpp)
 			COMMENT_LEFT="/*"
 			COMMENT_RIGHT="*/"
 			COMMENT_FILL="*"
@@ -146,7 +154,7 @@ stdheader()
 
 	if has_header "${header[@]}"; then
 		update_header
-	elif [ $(jq -r '."CodamHeader"."autoinsert"' "$CONFIG_FILE") == true ]; then
+	elif [ "$FORCE_INSERT" = true ] || [ "$(jq -r '."CodamHeader"."autoinsert"' "$CONFIG_FILE")" == true ]; then
 		insert_header
 	fi
 }
