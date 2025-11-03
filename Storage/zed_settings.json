@@ -11,7 +11,7 @@
 	"agent": {
 		"default_model": {
 			"provider": "copilot_chat",
-			"model": "claude-3.5-sonnet"
+			"model": "gpt-4.1"
 		},
 		"use_modifier_to_send": false,
 		"always_allow_tool_actions": true
@@ -84,7 +84,8 @@
 	],
 	"file_types": {
 		"C": ["C", "H", "c", "h"],
-		"TSX": ["TSX", "JSX"]
+		"TSX": ["TSX", "JSX"],
+		"TYPESCRIPT": ["TypeScript", "JavaScript"]
 	},
 	"languages": {
 		"C": {
@@ -118,6 +119,30 @@
 			"code_actions_on_format": {
 				"source.fixAll.eslint": true
 			}
+		},
+		"TypeScript": {
+			"format_on_save": "on",
+			"tab_size": 2,
+			"hard_tabs": false,
+			"show_whitespaces": "trailing",
+			"code_actions_on_format": {
+				"source.fixAll.eslint": true
+			}
+		},
+		"JavaScript": {
+			"format_on_save": "on",
+			"tab_size": 2,
+			"hard_tabs": false,
+			"show_whitespaces": "trailing",
+			"code_actions_on_format": {
+				"source.fixAll.eslint": true
+			}
+		},
+		"PHP": {
+			"format_on_save": "off"
+		},
+		"Markdown": {
+			"show_whitespaces": "selection"
 		}
 	}
 }
