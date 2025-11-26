@@ -41,7 +41,7 @@ print_help() {
             error   "Linux detected – xclip missing"
         fi
     else
-        warn "Unknown OS: $os (clipboard integration may not work)"
+        warning "Unknown OS: $os (clipboard integration may not work)"
     fi
     echo
 
@@ -55,7 +55,7 @@ print_help() {
         echo "  Source last modified: $src_date"
 
         if [[ "$source_c" -nt "$binary" ]]; then
-            warn "Binary is OUTDATED, rebuild recommended"
+            warning "Binary is OUTDATED, rebuild recommended"
         else
             success "Binary is up-to-date"
         fi
