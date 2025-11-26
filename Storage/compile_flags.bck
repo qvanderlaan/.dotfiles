@@ -11,7 +11,13 @@ libft/src/
 -I
 libft/include/
 -I
+lib/libft/include/
+-I
 libft/includes/
+-I
+lib/minilibx/
+-I
+lib/tester/include/
 -Wall
 -Wextra
 -Werror
