@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "$HOME/.dotfiles/Helpers/colors.sh"
+source "$HOME/.dotfiles/lib/colors.sh"
 
 warning "Are you sure you want to reset all changes? (y/n)"
 read response

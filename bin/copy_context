@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-source "$HOME/.dotfiles/Helpers/colors.sh"
+source "$HOME/.dotfiles/lib/colors.sh"
 
-binary="$HOME/.dotfiles/Builds/copy_context"
-source_c="$HOME/.dotfiles/Helpers/copy_context.c"
+binary="$HOME/.dotfiles/build/copy_context"
+source_c="$HOME/.dotfiles/src/copy_context.c"
 
 print_help() {
     echo
@@ -12,7 +12,7 @@ print_help() {
     echo
 
     echo "📖 Usage:"
-    echo "  copy_context.sh [OPTIONS]"
+    echo "  copy_context [OPTIONS]"
     echo
     echo "Options:"
     echo "  --strip-indent    Remove leading spaces/tabs from each line"
@@ -65,9 +65,9 @@ print_help() {
     echo
 
     echo "💡 Examples:"
-    echo "  ./copy_context.sh"
-    echo "  ./copy_context.sh --strip-indent"
-    echo "  ./copy_context.sh --rebuild --strip-indent"
+    echo "  copy_context"
+    echo "  copy_context --strip-indent"
+    echo "  copy_context --rebuild --strip-indent"
     echo
 }
 

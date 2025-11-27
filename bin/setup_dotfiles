@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+git config --global core.excludesfile ~/.dotfiles/config/git/.gitignore_global
+
+ln -s ~/.dotfiles/config/zed/settings.json ~/.config/zed/settings.json

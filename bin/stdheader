@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-source "$HOME/.dotfiles/Helpers/colors.sh"
+source "$HOME/.dotfiles/lib/colors.sh"
 
-CONFIG_FILE="$HOME/.dotfiles/config.json"
+CONFIG_FILE="$HOME/.dotfiles/config/config.json"
 
 TARGET_FILE=""
 USE_STDIN=false

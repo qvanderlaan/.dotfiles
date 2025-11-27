@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+ln -s ~/.dotfiles/config/compile_flags/compile_flags.bck compile_flags.txt
