@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+mkdir -p .zed
+
+cp -r ~/.dotfiles/config/zed/templates/. .zed/
+
+if output=$(gen_compile_flags 2>/dev/null); then
+	echo "$output" > .zed/c_flags.txt
+else
+	rm -f .zed/c_flags.txt
+fi

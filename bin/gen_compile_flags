@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mapfile -t makefiles < <(find . -type f \( -name "Makefile" \))
+start_dir=$(pwd)
+includes=()
+
+for mf in "${makefiles[@]}"; do
+	dir=$(dirname "$mf")
+	file=$(basename "$mf")
+
+	cd "$dir"
+	mapfile -t incs < <(make -p -f "$file" 2>&1 | grep -o -- "-I[^ ]*" | while read line; do make -f "$file" --eval="print: ; @echo $line" print 2>/dev/null; done | sort -u)
+	for inc in "${incs[@]}"; do
+		raw="${inc#-I}"
+		if [[ "$raw" == "" ]]; then
+			continue
+		fi
+	
+		abs_inc="$(realpath -m "$raw")"
+		
+		rel_inc="${abs_inc#$start_dir/}"
+		rel_inc="${rel_inc%/}"
+		rel_inc="${rel_inc#./}"
+		
+		if [[ "$inc" != -I/* ]]; then
+			rel_inc="${rel_inc#/}"
+		fi
+		
+		rel_inc="${rel_inc//\/\//\/}"
+		
+		[[ -z "$rel_inc" || "$rel_inc" == "." ]] && continue
+		
+		inc="-I$rel_inc"
+		includes+=("$inc")
+	done
+	cd "$start_dir"
+done
+
+printf "%s\n" "${includes[@]}" | sort -u

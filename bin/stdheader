@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 source "$HOME/.dotfiles/lib/colors.sh"
 
-CONFIG_FILE="$HOME/.dotfiles/config/config.json"
+# prefer local project config if available
+if [[ -f "./.zed/config.json" ]]; then
+	CONFIG_FILE="./.zed/config.json"
+else
+	CONFIG_FILE="$HOME/.dotfiles/config/config.json"
+fi
 
 TARGET_FILE=""
 USE_STDIN=false

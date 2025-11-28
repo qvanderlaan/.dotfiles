@@ -79,8 +79,7 @@
 		"**/Thumbs.db",
 		"**/.vscode",
 		"**/*.o",
-		"compile_flags.txt",
-		".clang-format"
+		"compile_flags.txt"
 	],
 	"file_types": {
 		"C": ["C", "H", "c", "h"],
@@ -103,12 +102,8 @@
 			"enable_language_server": true,
 			"formatter": {
 				"external": {
-					"command": "stdheader",
-					"arguments": [
-						"--insert",
-						"--stdin-filepath",
-						"{buffer_path}"
-					]
+					"command": "./.zed/on_save.sh",
+					"arguments": ["{buffer_path}"]
 				}
 			}
 		},
@@ -117,11 +112,7 @@
 			"formatter": {
 				"external": {
 					"command": "stdheader",
-					"arguments": [
-						"--insert",
-						"--stdin-filepath",
-						"{buffer_path}"
-					]
+					"arguments": ["--stdin-filepath", "{buffer_path}"]
 				}
 			}
 		},
