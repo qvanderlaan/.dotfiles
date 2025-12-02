@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+CFG="$HOME/.dotfiles/config/format-cpp/.clang-format"
+TARGET="/dev/stdin"
+
+clang-format -style=file:$CFG "$TARGET"
