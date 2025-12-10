@@ -27,8 +27,8 @@
 	},
 	"theme": {
 		"mode": "system",
-		"light": "One Light",
-		"dark": "One Dark"
+		"light": "Catppuccin Mocha",
+		"dark": "Catppuccin Mocha"
 	},
 	"project_panel": {
 		"indent_guides": {
