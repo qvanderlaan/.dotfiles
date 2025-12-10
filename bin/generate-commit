@@ -1,0 +1,93 @@
+#!/bin/bash
+source "$HOME/.dotfiles/lib/colors.sh"
+
+# --- CONFIGURATION ---
+
+MODEL="gpt-5.1-codex"
+MAX_CHARS=10000
+PROMPT_TEMPLATE="Write a git commit message for the code changes below.
+
+STRICT FORMATTING RULES:
+1. Header: A concise summary (max 72 chars) starting with a type (feat, fix, docs, refactor, chore, test). Use IMPERATIVE mood (e.g., 'Add' not 'Added').
+2. Body: Leave the second line blank.
+3. Bullets: From the third line, list changes using bullet points (-).
+4. Tense: The bullet points must use PAST TENSE verbs (e.g., 'Added', 'Updated', 'Fixed').
+
+Example Output:
+feat: Add server creation endpoints
+
+- Introduced create and remove methods
+- Implemented authentication check
+- Updated routes to include POST endpoints
+
+CHANGES TO SUMMARIZE:
+%s"
+
+# --- PRE-CHECKS ---
+
+if ! command -v copilot &> /dev/null; then
+	echo -e "${RED}Error:${RESET} 'copilot' CLI is not installed."
+	exit 1
+fi
+
+if ! git rev-parse --is-inside-work-tree &> /dev/null; then
+	echo -e "${RED}Error:${RESET} Not a git repository."
+	exit 1
+fi
+
+# --- MAIN LOGIC ---
+
+echo -e "\n${BOLD}🤖 AI Commit Generator${RESET}"
+
+if ! git diff --cached --quiet; then
+	DIFF_CONTENT=$(git diff --cached)
+	SOURCE="Staged Changes"
+else
+	DIFF_CONTENT=$(git diff)
+	SOURCE="Working Directory"
+fi
+
+if [ -z "$DIFF_CONTENT" ]; then
+	echo -e "${GRAY}   No changes found to summarize.${RESET}\n"
+	exit 0
+fi
+
+if [ ${#DIFF_CONTENT} -gt $MAX_CHARS ]; then
+	DIFF_CONTENT="${DIFF_CONTENT:0:$MAX_CHARS} ... [TRUNCATED]"
+	SUFFIX=" (Truncated)"
+fi
+
+echo -e "${GRAY}   📦 Context: ${SOURCE}${SUFFIX}${RESET}"
+echo -ne "${CYAN}   🧠 Analyzing with ${MODEL}...${RESET}"
+
+FULL_PROMPT=$(printf "$PROMPT_TEMPLATE" "$DIFF_CONTENT")
+
+RESULT=$(copilot --model "$MODEL" -s -p "$FULL_PROMPT" 2>&1)
+EXIT_CODE=$?
+
+echo -ne "\r\033[K"
+
+if [ $EXIT_CODE -ne 0 ]; then
+	echo -e "${RED}Error generating message:${RESET}\n$RESULT"
+	exit 1
+fi
+
+# 5. Output Result
+echo -e "${GREEN}┌──────────────────────────────────────────────────────────────┐${RESET}"
+echo -e "${GREEN}│${RESET}                   ${BOLD}SUGGESTED COMMIT MESSAGE${RESET}                   ${GREEN}│${RESET}"
+echo -e "${GREEN}└──────────────────────────────────────────────────────────────┘${RESET}\n"
+echo "$RESULT"
+echo -e "\n"
+
+COPIED=false
+if [[ "$OSTYPE" == "darwin"* ]] && echo "$RESULT" | pbcopy; then COPIED=true
+elif command -v wl-copy &> /dev/null && echo "$RESULT" | wl-copy; then COPIED=true
+elif command -v xclip &> /dev/null && echo "$RESULT" | xclip -selection clipboard; then COPIED=true
+elif command -v xsel &> /dev/null && echo "$RESULT" | xsel --clipboard --input; then COPIED=true
+fi
+
+if [ "$COPIED" = true ]; then
+	echo -e "${GRAY}✨ Copied to clipboard${RESET}"
+else
+	echo -e "${RED}⚠️  Could not copy to clipboard (tool not found)${RESET}"
+fi

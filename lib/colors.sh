@@ -6,6 +6,7 @@ YELLOW="\033[33m"
 BLUE="\033[34m"
 CYAN="\033[36m"
 BOLD="\033[1m"
+GRAY='\033[0;90m'
 RESET="\033[0m"
 
 info()		{ echo -e "${CYAN}$*${RESET}"; }
