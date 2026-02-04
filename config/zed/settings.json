@@ -4,72 +4,72 @@
 		"copilot": {
 			"proxy": null,
 			"proxy_no_verify": null,
-			"enterprise_uri": null
+			"enterprise_uri": null,
 		},
-		"enabled_in_text_threads": false
+		"enabled_in_text_threads": false,
 	},
 	"agent": {
 		"default_model": {
 			"provider": "copilot_chat",
-			"model": "gpt-4.1"
+			"model": "gpt-4.1",
 		},
 		"use_modifier_to_send": false,
-		"always_allow_tool_actions": true
+		"always_allow_tool_actions": true,
 	},
 	"features": {
-		"edit_prediction_provider": "copilot"
+		"edit_prediction_provider": "copilot",
 	},
 	"icon_theme": "Catppuccin Macchiato",
 	"ui_font_size": 16,
 	"buffer_font_size": 15,
 	"buffer_line_height": {
-		"custom": 2.1
+		"custom": 1.6,
 	},
 	"theme": {
 		"mode": "system",
-		"light": "One Light",
-		"dark": "One Dark"
+		"light": "Catppuccin Mocha",
+		"dark": "Catppuccin Mocha",
 	},
 	"project_panel": {
 		"indent_guides": {
-			"show": "always"
+			"show": "always",
 		},
 		"entry_spacing": "comfortable",
 		"indent_size": 23,
 		"auto_fold_dirs": false,
-		"dock": "right"
+		"dock": "right",
 	},
 	"autosave": {
 		"after_delay": {
-			"milliseconds": 1000
-		}
+			"milliseconds": 1000,
+		},
 	},
 	"toolbar": {
 		"breadcrumbs": false,
-		"quick_actions": false
+		"quick_actions": false,
 	},
 	"buffer_font_features": {
-		"calt": false
+		"calt": false,
 	},
 	"wrap_guides": [80],
 	"tab_bar": {
 		"show_nav_history_buttons": false,
-		"show_tab_bar_buttons": false
+		"show_tab_bar_buttons": false,
 	},
 	"extend_comment_on_newline": false,
 	"tabs": {
 		"git_status": true,
-		"file_icons": true
+		"file_icons": true,
 	},
 	"tab_size": 4,
 	"hard_tabs": true,
 	"show_whitespaces": "all",
 	"indent_guides": {
-		"enabled": true
+		"enabled": true,
 	},
 	"gutter": {
 		"breakpoints": false,
-		"min_line_number_digits": 3
+		"min_line_number_digits": 3,
 	},
 	"file_scan_exclusions": [
 		"**/.git",
@@ -79,12 +79,12 @@
 		"**/Thumbs.db",
 		"**/.vscode",
 		"**/*.o",
-		"compile_flags.txt"
+		"compile_flags.txt",
 	],
 	"file_types": {
 		"C": ["C", "H", "c", "h"],
 		"TSX": ["TSX", "JSX"],
-		"TYPESCRIPT": ["TypeScript", "JavaScript"]
+		"TYPESCRIPT": ["TypeScript", "JavaScript"],
 	},
 	"languages": {
 		"C": {
@@ -92,10 +92,10 @@
 			"enable_language_server": true,
 			"formatter": {
 				"external": {
-					"command": "format_42_c",
-					"arguments": ["{buffer_path}"]
-				}
-			}
+					"command": "./.zed/on_save.sh",
+					"arguments": ["{buffer_path}"],
+				},
+			},
 		},
 		"C++": {
 			"format_on_save": "on",
@@ -103,22 +103,22 @@
 			"formatter": {
 				"external": {
 					"command": "./.zed/on_save.sh",
-					"arguments": ["{buffer_path}"]
-				}
-			}
+					"arguments": ["{buffer_path}"],
+				},
+			},
 		},
 		"Make": {
 			"format_on_save": "on",
 			"formatter": {
 				"external": {
 					"command": "stdheader",
-					"arguments": ["--stdin-filepath", "{buffer_path}"]
-				}
-			}
+					"arguments": ["--stdin-filepath", "{buffer_path}"],
+				},
+			},
 		},
 		"JSON": {
 			"format_on_save": "on",
-			"tab_size": 4
+			"tab_size": 4,
 		},
 		"TSX": {
 			"format_on_save": "on",
@@ -126,8 +126,8 @@
 			"hard_tabs": false,
 			"show_whitespaces": "trailing",
 			"code_actions_on_format": {
-				"source.fixAll.eslint": true
-			}
+				"source.fixAll.eslint": true,
+			},
 		},
 		"TypeScript": {
 			"format_on_save": "on",
@@ -135,8 +135,8 @@
 			"hard_tabs": false,
 			"show_whitespaces": "trailing",
 			"code_actions_on_format": {
-				"source.fixAll.eslint": true
-			}
+				"source.fixAll.eslint": true,
+			},
 		},
 		"JavaScript": {
 			"format_on_save": "on",
@@ -144,14 +144,14 @@
 			"hard_tabs": false,
 			"show_whitespaces": "trailing",
 			"code_actions_on_format": {
-				"source.fixAll.eslint": true
-			}
+				"source.fixAll.eslint": true,
+			},
 		},
 		"PHP": {
-			"format_on_save": "off"
+			"format_on_save": "off",
 		},
 		"Markdown": {
-			"show_whitespaces": "selection"
-		}
-	}
+			"show_whitespaces": "selection",
+		},
+	},
 }
