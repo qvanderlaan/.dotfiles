@@ -1,0 +1,41 @@
+#!/bin/bash
+
+binary="$HOME/.dotfiles/build/cpp-fixer"
+cource_cpp="$HOME/.dotfiles/src/cpp-fixer.cpp"
+
+if [ ! -f "$binary" ] || [ "$cource_cpp" -nt "$binary" ]; then
+    # 1. Added -fno-rtti
+    # 2. Included all required Clang libraries in the correct dependency order
+    # 3. Moved llvm-config --libs to the end
+    clang++ -o "$binary" "$cource_cpp" \
+      -fno-rtti \
+      $(llvm-config --cxxflags --ldflags) \
+      -lclangTooling \
+      -lclangFrontend \
+      -lclangRewrite \
+      -lclangParse \
+      -lclangSerialization \
+      -lclangSema \
+      -lclangEdit \
+      -lclangAnalysis \
+      -lclangASTMatchers \
+      -lclangAST \
+      -lclangLex \
+      -lclangDriver \
+      -lclangBasic \
+      $(llvm-config --system-libs --libs all)
+fi
+
+if [ -n "$1" ] && [ -f "$1" ]; then
+    file_dir=$(dirname "$1")
+    # Stream the file -> clang-format -> cpp-fixer -> standard output
+    cat "$1" | clang-format -style="file:/home/qvan-der/.dotfiles/config/format-cpp/.clang-format" | \
+    "$binary" -I. -Iinc -Iinclude -I"$file_dir"
+
+# CASE 2: No file passed, acting as a raw pipe (e.g., cpp-fixer-all < src/main.cpp)
+else
+    # clang-format automatically reads stdin if no file is given
+    # cpp-fixer receives clang-format's output on stdin
+    clang-format -style="file:/home/qvan-der/.dotfiles/config/format-cpp/.clang-format" | \
+    "$binary" -I. -Iinc -Iinclude
+fi

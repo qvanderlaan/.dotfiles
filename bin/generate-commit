@@ -3,8 +3,8 @@ source "$HOME/.dotfiles/lib/colors.sh"
 
 # --- CONFIGURATION ---
 
-MODEL="gpt-5.1-codex"
-MAX_CHARS=10000
+MODEL="gpt-5.3-codex"
+MAX_CHARS=100000
 PROMPT_TEMPLATE="Write a git commit message for the code changes below.
 
 STRICT FORMATTING RULES:
