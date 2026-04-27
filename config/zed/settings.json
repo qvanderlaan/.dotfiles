@@ -102,8 +102,7 @@
 			"enable_language_server": true,
 			"formatter": {
 				"external": {
-					"command": "./.zed/on_save.sh",
-					"arguments": ["{buffer_path}"],
+					"command": "cpp-fixer-all",
 				},
 			},
 		},
